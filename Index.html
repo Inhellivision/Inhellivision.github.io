@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang=“en”>
+<head>
+  <meta charset=“UTF-8”>
+  <title>Bouncing 3D Cube</title>
+  <style>
+    body, html { margin: 0; overflow: hidden; height: 100%; width: 100%; }
+    #canvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id=“canvas”></canvas>
+  <script src=“https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js”></script>
+  <script>
+    // — Scene setup —
+    const canvas = document.getElementById(‘canvas’);
+    const renderer = new THREE.WebGLRenderer({canvas, antialias: true});
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 5);
+
+    // — Cube setup —
+    const geometry = new THREE.BoxGeometry(1,1,1);
+    const material = new THREE.MeshNormalMaterial();
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    // Velocity vector
+    let vel = new THREE.Vector3(0.02, 0.015, 0);
+
+    // Resize handling
+    function onWindowResize() {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener(‘resize’, onWindowResize);
+    onWindowResize();
+
+    // Touch / click to add random impulse
+    function kick() {
+      vel.x += (Math.random() - 0.5) * 0.04;
+      vel.y += (Math.random() - 0.5) * 0.04;
+    }
+    window.addEventListener(‘pointerdown’, kick);
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      cube.position.add(vel);
+
+      // Bounce off screen edges (project to NDC)
+      const p = cube.position.clone();
+      const projected = p.project(camera);
+      // if beyond [-1,1], invert velocity
+      if (projected.x < -1 || projected.x > 1) vel.x *= -1;
+      if (projected.y < -1 || projected.y > 1) vel.y *= -1;
+
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.008;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
